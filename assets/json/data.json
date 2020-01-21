@@ -1,0 +1,74 @@
+[
+  {
+    "id" : 1,
+    "image" : "assets/images/breath_image.png",
+    "name" : "Breath Fresh Air",
+    "duration" : "At least 30 minutes a day",
+    "next_remainder" : "",
+    "time" : "14:30 - 15:00"
+  },
+  {
+    "id" : 2,
+    "image" : "assets/images/sleep_image.png",
+    "name" : "Good Night Sleep",
+    "duration" : "At least 7-8 hours a day",
+    "next_remainder" : "",
+    "time" : "22:30 - 06:00"
+  },
+  {
+    "id" : 3,
+    "image" : "assets/images/water_image.png",
+    "name" : "Drink Fresh Water",
+    "duration" : "A glass every 2 hours",
+    "next_remainder" : "",
+    "time" : "07:00 - 20:00"
+  },
+  {
+    "id" : 4,
+    "image" : "assets/images/fitness_image.png",
+    "name" : "Physical Activity",
+    "duration" : "At least 3 times per week",
+    "next_remainder" : "",
+    "time" : "18:30 - 19:30"
+  },
+  {
+    "id" : 5,
+    "image" : "assets/images/diet.png",
+    "name" : "Eat Healthy Food",
+    "duration" : "Optimal 3 meals a day",
+    "next_remainder" : "",
+    "time" : "10:30 - 21:00"
+  },
+  {
+    "id" : 6,
+    "image" : "assets/images/sun_image.png",
+    "name" : "Go out in the Sun",
+    "duration" : "At least 30 minutes a day",
+    "next_remainder" : "",
+    "time" : "12:00 - 12:30"
+  },
+  {
+    "id" : 7,
+    "image" : "assets/images/beliefg.png",
+    "name" : "Belief is essential",
+    "duration" : "At least 30 minutes a day",
+    "next_remainder" : "",
+    "time" : "22:00 - 22:30"
+  },
+  {
+    "id" : 8,
+    "image" : "assets/images/tech_image.png",
+    "name" : "Use the TECH",
+    "duration" : "Measure once a day",
+    "next_remainder" : "",
+    "time" : "07:00 - 07:05"
+  },
+  {
+    "id" : 9,
+    "image" : "assets/images/control_image.png",
+    "name" : "Control is Power",
+    "duration" : "Learn a new good habit",
+    "next_remainder" : "",
+    "time" : "08:00 - 21:15"
+  }
+]
