@@ -39,6 +39,7 @@ class Model{
 
 
 
+
   Model.fromJson(Map<String, dynamic> json)
       : time = json['time'],
         meal = json['meal'],

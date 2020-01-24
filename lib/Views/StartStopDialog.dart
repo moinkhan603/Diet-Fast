@@ -1,14 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
+//import 'dart:html';
 
 import 'package:diet_fast_forward/Model.dart';
 import 'package:diet_fast_forward/Views/tutorialView.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vibration/vibration.dart';
 
 import '../SharedPref.dart';
 
@@ -22,7 +25,7 @@ class StartStopDialog extends StatefulWidget {
 
 class _WatcherState extends State<StartStopDialog> {
 
-  String _timeString='';
+  String _timeString;
   String _mealString='BreakFast';
 
   @override
@@ -32,15 +35,17 @@ class _WatcherState extends State<StartStopDialog> {
     super.initState();
 
     loadSharedPrefs();
-    FlutterRingtonePlayer.playNotification();
   }
   SharedPref sharedPref = SharedPref();
 
   var chewNumber=32;
   var pauseTime=5;
 
-  TextEditingController _chewFilter = new TextEditingController();
-  TextEditingController _pauseTimeFilter = new TextEditingController();
+  int bites=0;
+  String totalTime='0';
+
+  TextEditingController _chewFilter = new TextEditingController(text: '32');
+  TextEditingController _pauseTimeFilter = new TextEditingController(text: '5');
 
   List dataList = new List();
 
@@ -64,14 +69,8 @@ class _WatcherState extends State<StartStopDialog> {
   Color _iconVibratorColor = Colors.black;
   Color _iconSpeakerColor = Colors.black;
 
-
-  bool startIsPressed = false;
-  bool pauseIsPressed = false;
-  bool resetIsPressed = false;
-  bool finishIsPressed = false;
-  bool ResumeIsPressed = false;
   String stopTimeToDisplay='00:00:00';
-  final dur= Duration(milliseconds: 10);
+  final dur= Duration(seconds: 1);
 
   Stopwatch watch= new Stopwatch();
 
@@ -84,16 +83,23 @@ class _WatcherState extends State<StartStopDialog> {
 
   keepRunning(){
     if(watch.isRunning){
-      setState(() {
-        stopTimeToDisplay=
-            (watch.elapsed.inMinutes%60).toString().padLeft(2,'0')+' :'' '+
-                (watch.elapsed.inSeconds%60).toString().padLeft(2,'0')+' : ' +
-                (watch.elapsed.inMilliseconds%1000).toString().padLeft(2,'0');
-      });
+      if (this.mounted) {
+        setState(() {
+          stopTimeToDisplay=
+              (watch.elapsed.inMinutes%60).toString().padLeft(2,'0')+' :'' '+
+                  (watch.elapsed.inSeconds%60).toString().padLeft(2,'0')+' : ' +
+                  (watch.elapsed.inMilliseconds%1000).toString().padLeft(2,'0');
+          if(!isNotVoice){
+            FlutterRingtonePlayer.playNotification();
+          }
+        });
 
-      calculateProgress(watch.elapsed.inSeconds);
-      if(bitesPerc>=100){
-        watch.start();
+      }
+
+      if(bitesPerc<100){
+        calculateProgress(watch.elapsed.inSeconds);
+      } else{
+//        watch.start();
         calculateNewProgress(watch.elapsed.inSeconds);
       }
       startTimer();
@@ -101,55 +107,63 @@ class _WatcherState extends State<StartStopDialog> {
   }
 
   void startStopwatch(){
-    setState(() {
+    if(_chewFilter.text.length!=0 && _pauseTimeFilter.text.length!=0){
+      if(this.mounted){
+        setState(() {
 
-      finishIsPressed=false;
+          isFinish=true;
+          isReset=true;
+          isPause=true;
+          isStart=false;
+        });
+      }
+      watch.start();
+      startTimer();
+    }
 
-      isFinish=true;
-      isReset=true;
-      isPause=true;
-      isStart=false;
-    });
-    watch.start();
-    startTimer();
   }
-//  void pauseStopwatch(){
-//    setState(() {
-//      isPause=true;
-//      isFinish=true;
-//    });
-//    watch.stop();
-//  }
   void resetStopwatch(){
-    setState(() {
-      stopTimeToDisplay='00:00:00';
-      chewPerc=0.0;
-      isStart=true;
-      isReset=false;
-      isPause=false;
-      isFinish=false;
-      isResume=false;
-    });
+    if(this.mounted){
+      setState(() {
+        stopTimeToDisplay='00:00:00';
+        chewPerc=0.0;
+        bitesPerc=0.0;
+        bites=0;
+        totalTime='0';
+        isStart=true;
+        isReset=false;
+        isPause=false;
+        isFinish=false;
+        isResume=false;
+      });
+    }
     watch.stop();
     watch.reset();
   }
-  void PauseStopwatch(){
-    setState(() {
-      isPause=false;
-      isFinish=false;
-      isResume=true;
-      resetIsPressed=false;
-    });
+  void pauseStopwatch(){
+    if(this.mounted){
+      setState(() {
+        isPause=false;
+        isFinish=false;
+        isResume=true;
+        isReset=true;
+//      resetIsPressed=false;
+      });
+    }
     watch.stop();
   }
   void ResumeStopwatch(){
-    setState(() {
-      isPause=true;
-      isFinish=true;
-      isResume=false;
-      resetIsPressed=false;
-    });
+    if(this.mounted){
+      setState(() {
+        isPause=true;
+        isFinish=true;
+        isResume=false;
+        isReset=true;
+//      resetIsPressed=false;
+      });
+    }
     watch.start();
+    startTimer();
   }
 
 
@@ -173,38 +187,66 @@ class _WatcherState extends State<StartStopDialog> {
                 Column(
                   children: <Widget>[
                     Container(
-                      child: Text('CHEW NUMBER',style: TextStyle(color: Colors.grey,fontSize: 16),),
+                      width: MediaQuery.of(context).size.width/2-25,
+                      child: Text('CHEW NUMBER',style: TextStyle(color: Colors.grey,fontSize: 16),textAlign: TextAlign.center,),
                     ),
+
                     Container(
+                      width: MediaQuery.of(context).size.width/2-25,
                       margin: EdgeInsets.all(10),
-                      padding: EdgeInsets.only(left: 30,right: 30,top: 10,bottom: 10),
+                      padding: EdgeInsets.only(left: 20,right: 20,),
                       decoration: BoxDecoration(
                         border: Border.all(color: Color(0xFFBe97619),width: 3,),
                       ),
                       child:TextField(
+                        maxLines: 1,
                         controller: _chewFilter,
-                        decoration: InputDecoration(hintText: 'Default = 32'),
-                        textAlign: TextAlign.center,),
-                    )
+                        style: TextStyle(color: Color(0xFFBe97619),fontSize: 18,fontWeight: FontWeight.bold),
+                        decoration:InputDecoration(
+                            hintStyle: TextStyle(color: Color(0xFFBe97619),fontSize: 18,fontWeight: FontWeight.bold),
+                            hintText: 'Default = 32'
+                        ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            WhitelistingTextInputFormatter.digitsOnly
+                          ],
+                        autofocus: false,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Container(
-                      child: Text('PAUSE TIME',style: TextStyle(color: Colors.grey,fontSize: 16),),
+                      width: MediaQuery.of(context).size.width/2-25,
+                      child: Text('PAUSE TIME',style: TextStyle(color: Colors.grey,fontSize: 16),textAlign: TextAlign.center,),
                     ),
                     Container(
+                      width: MediaQuery.of(context).size.width/2-25,
                       margin: EdgeInsets.all(10),
-                      padding: EdgeInsets.only(left: 35,right: 35,top: 10,bottom: 10),
+                      padding: EdgeInsets.only(left: 20,right: 20,),
                       decoration: BoxDecoration(
                         border: Border.all(color: Color(0xFFBe97619),width: 3,),
                       ),
                       child:TextField(
+                        maxLines: 1,
                         controller: _pauseTimeFilter,
-                        decoration: InputDecoration(hintText: 'Default = 5'),
-                        textAlign: TextAlign.center,),
-                    )
+                        style: TextStyle(color: Color(0xFFBe97619),fontSize: 18,fontWeight: FontWeight.bold),
+                        decoration:InputDecoration(
+                            hintStyle: TextStyle(color: Color(0xFFBe97619),fontSize: 18,fontWeight: FontWeight.bold),
+                            hintText: 'Default = 5'
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: <TextInputFormatter>[
+                          WhitelistingTextInputFormatter.digitsOnly
+                        ],
+                        autofocus: false,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ],
                 )
               ],
@@ -213,6 +255,8 @@ class _WatcherState extends State<StartStopDialog> {
                 children: <Widget>[
                   CircularPercentIndicator(
                     radius: 230.0,
+//                    animation: true,
+//                    animationDuration: int.parse(_chewFilter.text),
                     lineWidth: 7.0,
                     percent: bitesPerc/100,
                     center: Text(bitesPerc.toString()+"%",style: TextStyle(color: Color(0xFFBe97619),fontSize: 20),),
@@ -223,6 +267,8 @@ class _WatcherState extends State<StartStopDialog> {
                     child: CircularPercentIndicator(
                       radius: 100.0,
                       lineWidth: 7.0,
+//                      animation: true,
+//                      animationDuration: int.parse(_pauseTimeFilter.text),
                       percent: chewPerc/100,
                       center: Text(chewPerc.toString()+"%",style: TextStyle(color: Color(0xFFBe97619),fontSize: 20),),
                       progressColor:  Color(0xFFBe97619),
@@ -245,7 +291,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
-                            onPressed: startIsPressed ? null : startStopwatch,
+                            onPressed: startStopwatch,
                             color: Color(0xFFBe97619),
                             child: Text('START',style: TextStyle(color: Colors.white),),
                           ),
@@ -256,7 +302,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
-                            onPressed: resetIsPressed ? null : resetStopwatch,
+                            onPressed:resetStopwatch,
                             color: Color(0xFFBe97619),
                             child: Text('RESET',style: TextStyle(color: Colors.white)),
                           ),
@@ -267,7 +313,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
-                            onPressed: pauseIsPressed ? null : PauseStopwatch,
+                            onPressed:pauseStopwatch,
                             color: Color(0xFFBe97619),
                             child: Text('PAUSE',style: TextStyle(color: Colors.white)),
                           ),
@@ -278,7 +324,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
-//                            onPressed: _saveData,
+                            onPressed: _saveData,
                             color: Color(0xFFBe97619),
                             child: Text('FINISH',style: TextStyle(color: Colors.white)),
                           ),
@@ -317,14 +363,18 @@ class _WatcherState extends State<StartStopDialog> {
                                     child: IconButton(
                                       icon: Icon(Icons.vibration, color: _iconVibratorColor,),
                                       onPressed: (){
-                                        setState(() {
-                                          if(_iconVibratorColor==Colors.black){
-                                            _iconVibratorColor = Color(0xFFBe97619);
-                                          }else{
-                                            _iconVibratorColor = Colors.black;
-                                          }
+                                        if(this.mounted){
+                                          setState(() {
+                                            if(_iconVibratorColor==Colors.black){
+                                              _iconVibratorColor = Color(0xFFBe97619);
+                                              Vibration.vibrate(duration: 1000, amplitude: 128);
+                                            }else{
+                                              Vibration.cancel();
+                                              _iconVibratorColor = Colors.black;
+                                            }
 
-                                        });
+                                          });
+                                        }
                                       },
                                     ),
                                   ),
@@ -333,23 +383,25 @@ class _WatcherState extends State<StartStopDialog> {
                                     child: IconButton(
                                       icon: Icon(Icons.ring_volume, color: _iconSpeakerColor,),
                                       onPressed: (){
-                                        setState(() {
+                                        if(this.mounted){
+                                          setState(() {
 
-                                          if(_iconSpeakerColor==Colors.black){
-                                            _iconSpeakerColor = Color(0xFFBe97619);
-                                            FlutterRingtonePlayer.play(
-                                              android: AndroidSounds.notification,
-                                              ios: IosSounds.glass,
-                                              looping: true, // Android only - API >= 28
-                                              volume: 1, // Android only - API >= 28
-                                              asAlarm: false, // Android only - all APIs
-                                            );
-                                          }else{
-                                            FlutterRingtonePlayer.stop();
-                                            _iconSpeakerColor = Colors.black;
-                                          }
+                                            if(_iconSpeakerColor==Colors.black){
+                                              _iconSpeakerColor = Color(0xFFBe97619);
+                                              FlutterRingtonePlayer.play(
+                                                android: AndroidSounds.notification,
+                                                ios: IosSounds.glass,
+                                                looping: true, // Android only - API >= 28
+                                                volume: 1, // Android only - API >= 28
+                                                asAlarm: false, // Android only - all APIs
+                                              );
+                                            }else{
+                                              FlutterRingtonePlayer.stop();
+                                              _iconSpeakerColor = Colors.black;
+                                            }
 
-                                        });
+                                          });
+                                        }
                                       },
                                     ),
                                   ),
@@ -371,14 +423,18 @@ class _WatcherState extends State<StartStopDialog> {
                                     child: IconButton(
                                       icon: Icon(Icons.vibration, color: _iconVibratorColor,),
                                       onPressed: (){
-                                        setState(() {
-                                          if(_iconVibratorColor==Colors.black){
-                                            _iconVibratorColor = Color(0xFFBe97619);
-                                          }else{
-                                            _iconVibratorColor = Colors.black;
-                                          }
+                                        if(this.mounted){
+                                          setState(() {
+                                            if(_iconVibratorColor==Colors.black){
+                                              _iconVibratorColor = Color(0xFFBe97619);
+                                              Vibration.vibrate(duration: 1000, amplitude: 128);
+                                            }else{
+                                              Vibration.cancel();
+                                              _iconVibratorColor = Colors.black;
+                                            }
 
-                                        });
+                                          });
+                                        }
                                       },
                                     ),
                                   ),
@@ -387,14 +443,25 @@ class _WatcherState extends State<StartStopDialog> {
                                     child: IconButton(
                                       icon: Icon(Icons.ring_volume, color: _iconSpeakerColor,),
                                       onPressed: (){
-                                        setState(() {
-                                          if(_iconSpeakerColor==Colors.black){
-                                            _iconSpeakerColor = Color(0xFFBe97619);
-                                          }else{
-                                            _iconSpeakerColor = Colors.black;
-                                          }
+                                        if(this.mounted){
+                                          setState(() {
+                                            if(_iconSpeakerColor==Colors.black){
+                                              _iconSpeakerColor = Color(0xFFBe97619);
+                                              FlutterRingtonePlayer.play(
+                                                android: AndroidSounds.notification,
+                                                ios: IosSounds.glass,
+                                                looping: true, // Android only - API >= 28
+                                                volume: 1, // Android only - API >= 28
+                                                asAlarm: true // Android only - all APIs
+                                              );
+                                            }else{
+                                              FlutterRingtonePlayer.stop();
+                                              _iconSpeakerColor = Colors.black;
+                                            }
 
-                                        });
+
+                                          });
+                                        }
                                       },
                                     ),
                                   ),
@@ -423,7 +490,7 @@ class _WatcherState extends State<StartStopDialog> {
                               Text('Total Bites',style: TextStyle(fontSize: 20,color: Color(0xFFBe97619)),),
                               Container(
                                   margin: EdgeInsets.only(top: 10,bottom: 10),
-                                  child: Text('0'))
+                                  child: Text(bites.toString()))
                             ],
                           ),
                         ),
@@ -435,7 +502,7 @@ class _WatcherState extends State<StartStopDialog> {
                               Text('Total Time',style: TextStyle(fontSize: 20,color: Color(0xFFBe97619)),),
                               Container(
                                   margin: EdgeInsets.only(top: 10,bottom: 10),
-                                  child: Text('0'))
+                                  child: Text(totalTime.toString()))
                             ],
                           ),
                         )
@@ -466,44 +533,61 @@ class _WatcherState extends State<StartStopDialog> {
   }
 
 
-
-//  _stopwatch(){
-//    return
-//  }
-
-
   _saveData() {
+
+    DateFormat dateFormat = new DateFormat.Hms();
+
+    DateTime bOpen = dateFormat.parse("03:00:01");
+    DateTime bClose = dateFormat.parse("12:00:00");
+    DateTime lOpen = dateFormat.parse("12:00:01");
+    DateTime lClose = dateFormat.parse("18:00:00");
+    DateTime now = dateFormat.parse(_timeString);
+
+    if(now.isAfter(bOpen)&&now.isBefore(bClose)){
+      _mealString='Breakfast';
+    }else if(now.isBefore(lClose)&&now.isAfter(lOpen)){
+      _mealString='Lunch';
+    }else{
+      _mealString='Supper';
+    }
+
+
     String time = _timeString;
     String meal = _mealString;
-    String bites = '0';
-    String totalTime = '0';
+    String abites = bites.toString();
+    String atotalTime = totalTime;
 
     print('time is '+'$time');
 
-    Model model = new Model(time, meal, bites, totalTime);
+    Model model = new Model(time, meal, abites, atotalTime);
     var object = model.toJson();
 
     print("modelData"+object.toString());
 
-    dataList.add(object);
+//    dataList.add(object.toString());
 
-    sharedPref.save('newList', dataList);
-    Navigator.pop(context);
+    sharedPref.save('newList', object.toString());
+
 
     loadSharedPrefs();
-    
+    Navigator.pop(context);
   }
-  loadSharedPrefs(){
+  loadSharedPrefs() async {
     try {
-      List list = new List( sharedPref.read('newList'));
+      List<String> list =await sharedPref.read('newList');
+//      List list = new List( jsonDecode(string));
 //      Scaffold.of(context).showSnackBar(SnackBar(
 //          content: new Text("Loaded!"),
 //          duration: const Duration(milliseconds: 500)));
-      setState(() {
-        dataList = list;
-        print('DataList'+list.toString());
-      });
+     print('listid'+list[0]);
 
+      if(this.mounted){
+        setState(() {
+          dataList = list;
+
+        });
+      }
+      print('DataList'+list.toString());
 
     } catch (Excepetion) {
 //      Scaffold.of(context).showSnackBar(SnackBar(
@@ -513,33 +597,61 @@ class _WatcherState extends State<StartStopDialog> {
   }
 
   void calculateProgress(int inSeconds) {
+    int value=int.parse(_chewFilter.text);
     if(bitesPerc<100){
-      bitesPerc=inSeconds/chewNumber*100;
+      bitesPerc=inSeconds/value*100;
     }else{
-      watch.stop();
+//      watch.stop();
       bitesPerc=100;
     }
   }
 
   void calculateNewProgress(int inSeconds) {
+    int value=int.parse(_pauseTimeFilter.text);
     if(chewPerc<100){
-      chewPerc=inSeconds/pauseTime*100;
+      chewPerc=(inSeconds-int.parse(_chewFilter.text))/value*100;
     }else{
-      watch.stop();
       chewPerc=100;
+      watch.stop();
+      resetCycleStopwatch();
+      startStopwatch();
     }
   }
 
+  void resetCycleStopwatch(){
+    if(this.mounted){
+      setState(() {
+        totalTime=stopTimeToDisplay;
+        stopTimeToDisplay='00:00:00';
+        chewPerc=0.0;
+        bitesPerc=0.0;
+        bites=bites+1;
+        isStart=false;
+        isReset=true;
+        isPause=true;
+        isFinish=true;
+        isResume=false;
+        totalTime=totalTime;
+
+      });
+    }
+//    watch.stop();
+    watch.reset();
+  }
+
   String _formatDateTime(DateTime dateTime) {
-    return DateFormat('yyyy-MM-dd hh:mm:ss').format(dateTime);
+    return DateFormat('yyyy-MM-ddThh:mm:ss').format(dateTime);
   }
 
   void _getTime() {
     final DateTime now = DateTime.now();
     final String formattedDateTime = _formatDateTime(now);
-    setState(() {
-      _timeString = formattedDateTime;
-    });
+    if(this.mounted){
+      setState(() {
+        List<String> separated= formattedDateTime.split('T');
+        _timeString = separated[1];
+      });
+    }
   }
 
 

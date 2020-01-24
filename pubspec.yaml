@@ -34,6 +34,7 @@ dependencies:
   shared_preferences: ^0.5.6
   flutter_ringtone_player: ^2.0.0
   percent_indicator: "^2.1.1"
+  vibration: 1.2.2
 
 dev_dependencies:
   flutter_test:
