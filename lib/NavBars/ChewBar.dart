@@ -1,9 +1,11 @@
 
 import 'dart:io';
 
+import 'package:diet_fast_forward/Database/DatabaseHelper.dart';
 import 'package:diet_fast_forward/Views/StartStopDialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../SharedPref.dart';
 
@@ -16,15 +18,19 @@ class ChewBar extends StatefulWidget {
 
 class _ChewBarState extends State<ChewBar> {
 
-  SharedPref sharedPref = SharedPref();
+
+  final dbHelper = DatabaseHelper.instance;
+
+//  SharedPref sharedPref = SharedPref();
 
   List dataList = new List();
 
 
   @override
   void initState() {
+    _query();
     super.initState();
-    loadSharedPrefs();
+
   }
 
   @override
@@ -62,17 +68,17 @@ class _ChewBarState extends State<ChewBar> {
 
 
 
-  TableRow _buildTableRow(String listOfNames) {
-    return TableRow(
-      children: listOfNames.split(',').map((name) {
-        return Container(
-          alignment: Alignment.center,
-          child: Text(name,),
-          padding: EdgeInsets.all(5.0),
-        );
-      }).toList(),
-    );
-  }
+//  TableRow _buildTableRow(String listOfNames) {
+//    return TableRow(
+//      children: listOfNames.split(',').map((name) {
+//        return Container(
+//          alignment: Alignment.center,
+//          child: Text(name,),
+//          padding: EdgeInsets.all(5.0),
+//        );
+//      }).toList(),
+//    );
+//  }
   TableRow _buildFirstTableRow(String listOfNames) {
     return TableRow(
       decoration: BoxDecoration(color: Color(0xFFBe97619)),
@@ -87,27 +93,6 @@ class _ChewBarState extends State<ChewBar> {
     );
   }
 
-  loadSharedPrefs() async {
-    try {
-      List<String> list =await new List( sharedPref.read('newList'));
-//      Scaffold.of(context).showSnackBar(SnackBar(
-//          content: new Text("Loaded!"),
-//          duration: const Duration(milliseconds: 500)));
-      dataList = await list;
-      print('DataList'+list.toString());
-//      setState(() {
-//
-//      });
-
-
-
-    } catch (Excepetion) {
-      Scaffold.of(context).showSnackBar(SnackBar(
-          content: new Text("Nothing found!"),
-          duration: const Duration(milliseconds: 1000)));
-    }
-  }
-
   _newRows()  {
     if(dataList.length>0){
       for(int i=0;i<dataList.length;i++){
@@ -116,6 +101,7 @@ class _ChewBarState extends State<ChewBar> {
         print('newString'+newString);
 
         return TableRow(
+
           children: newString.split(',').map((name) {
             return Container(
               alignment: Alignment.center,
@@ -125,7 +111,8 @@ class _ChewBarState extends State<ChewBar> {
           }).toList(),
         );
       }
-    }else{
+    }
+    else{
       String newString=' , , , ';
       return TableRow(
 
@@ -142,5 +129,15 @@ class _ChewBarState extends State<ChewBar> {
 
   }
 
+
+  Future<String> _query() async {
+    final allRows = await dbHelper.queryAllRows();
+    print('query all rows:');
+    allRows.forEach((row) => print(row));
+    allRows.forEach((row) => dataList.add(row));
+
+    return 'Success';
+
+  }
 
 }

@@ -1,4 +1,4 @@
-package com.example.diet_fast_forward;
+package com.globalprohealth.diet_fast_forward;
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;

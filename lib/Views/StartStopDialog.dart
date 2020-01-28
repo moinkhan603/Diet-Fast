@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 //import 'dart:html';
 
+import 'package:diet_fast_forward/Database/DatabaseHelper.dart';
 import 'package:diet_fast_forward/Model.dart';
 import 'package:diet_fast_forward/Views/tutorialView.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,7 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+//import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 
 import '../SharedPref.dart';
@@ -25,6 +26,8 @@ class StartStopDialog extends StatefulWidget {
 
 class _WatcherState extends State<StartStopDialog> {
 
+  final dbHelper = DatabaseHelper.instance;
+
   String _timeString;
   String _mealString='BreakFast';
 
@@ -34,9 +37,8 @@ class _WatcherState extends State<StartStopDialog> {
     Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
     super.initState();
 
-    loadSharedPrefs();
   }
-  SharedPref sharedPref = SharedPref();
+//  SharedPref sharedPref = SharedPref();
 
   var chewNumber=32;
   var pauseTime=5;
@@ -90,7 +92,17 @@ class _WatcherState extends State<StartStopDialog> {
                   (watch.elapsed.inSeconds%60).toString().padLeft(2,'0')+' : ' +
                   (watch.elapsed.inMilliseconds%1000).toString().padLeft(2,'0');
           if(!isNotVoice){
-            FlutterRingtonePlayer.playNotification();
+//            FlutterRingtonePlayer.playNotification();
+            FlutterRingtonePlayer.play(
+              android: AndroidSounds.notification,
+              ios: IosSounds.glass,
+              looping: true, // Android only - API >= 28
+              volume: 1, // Android only - API >= 28
+              asAlarm: false, // Android only - all APIs
+            );
+          }
+          if(!isNotVibrate){
+            Vibration.vibrate(duration: 100, amplitude: 128);
           }
         });
 
@@ -255,8 +267,7 @@ class _WatcherState extends State<StartStopDialog> {
                 children: <Widget>[
                   CircularPercentIndicator(
                     radius: 230.0,
-//                    animation: true,
-//                    animationDuration: int.parse(_chewFilter.text),
+                    startAngle: 90,
                     lineWidth: 7.0,
                     percent: bitesPerc/100,
                     center: Text(bitesPerc.toString()+"%",style: TextStyle(color: Color(0xFFBe97619),fontSize: 20),),
@@ -267,8 +278,7 @@ class _WatcherState extends State<StartStopDialog> {
                     child: CircularPercentIndicator(
                       radius: 100.0,
                       lineWidth: 7.0,
-//                      animation: true,
-//                      animationDuration: int.parse(_pauseTimeFilter.text),
+                      startAngle: 90,
                       percent: chewPerc/100,
                       center: Text(chewPerc.toString()+"%",style: TextStyle(color: Color(0xFFBe97619),fontSize: 20),),
                       progressColor:  Color(0xFFBe97619),
@@ -291,6 +301,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
+                            padding: EdgeInsets.all(5),
                             onPressed: startStopwatch,
                             color: Color(0xFFBe97619),
                             child: Text('START',style: TextStyle(color: Colors.white),),
@@ -302,6 +313,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
+                            padding: EdgeInsets.all(5),
                             onPressed:resetStopwatch,
                             color: Color(0xFFBe97619),
                             child: Text('RESET',style: TextStyle(color: Colors.white)),
@@ -313,6 +325,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
+                            padding: EdgeInsets.all(5),
                             onPressed:pauseStopwatch,
                             color: Color(0xFFBe97619),
                             child: Text('PAUSE',style: TextStyle(color: Colors.white)),
@@ -324,6 +337,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
+                            padding: EdgeInsets.all(5),
                             onPressed: _saveData,
                             color: Color(0xFFBe97619),
                             child: Text('FINISH',style: TextStyle(color: Colors.white)),
@@ -335,6 +349,7 @@ class _WatcherState extends State<StartStopDialog> {
                         child: Container(
                           margin: EdgeInsets.only(left: 5,right: 5),
                           child: RaisedButton(
+                            padding: EdgeInsets.all(5),
                             onPressed: ResumeStopwatch,
                             color: Color(0xFFBe97619),
                             child: Text('RESUME',style: TextStyle(color: Colors.white)),
@@ -367,9 +382,11 @@ class _WatcherState extends State<StartStopDialog> {
                                           setState(() {
                                             if(_iconVibratorColor==Colors.black){
                                               _iconVibratorColor = Color(0xFFBe97619);
-                                              Vibration.vibrate(duration: 1000, amplitude: 128);
+//                                              Vibration.vibrate(duration: 1000, amplitude: 128);
+                                              isNotVibrate=false;
                                             }else{
-                                              Vibration.cancel();
+//                                              Vibration.cancel();
+                                              isNotVibrate=true;
                                               _iconVibratorColor = Colors.black;
                                             }
 
@@ -388,15 +405,17 @@ class _WatcherState extends State<StartStopDialog> {
 
                                             if(_iconSpeakerColor==Colors.black){
                                               _iconSpeakerColor = Color(0xFFBe97619);
-                                              FlutterRingtonePlayer.play(
-                                                android: AndroidSounds.notification,
-                                                ios: IosSounds.glass,
-                                                looping: true, // Android only - API >= 28
-                                                volume: 1, // Android only - API >= 28
-                                                asAlarm: false, // Android only - all APIs
-                                              );
+                                              isNotVoice=false;
+//                                              FlutterRingtonePlayer.play(
+//                                                android: AndroidSounds.notification,
+//                                                ios: IosSounds.glass,
+//                                                looping: true, // Android only - API >= 28
+//                                                volume: 1, // Android only - API >= 28
+//                                                asAlarm: false, // Android only - all APIs
+//                                              );
                                             }else{
-                                              FlutterRingtonePlayer.stop();
+                                              isNotVoice=true;
+//                                              FlutterRingtonePlayer.stop();
                                               _iconSpeakerColor = Colors.black;
                                             }
 
@@ -427,9 +446,11 @@ class _WatcherState extends State<StartStopDialog> {
                                           setState(() {
                                             if(_iconVibratorColor==Colors.black){
                                               _iconVibratorColor = Color(0xFFBe97619);
-                                              Vibration.vibrate(duration: 1000, amplitude: 128);
+//                                              Vibration.vibrate(duration: 1000, amplitude: 128);
+                                              isNotVibrate=false;
                                             }else{
-                                              Vibration.cancel();
+                                              isNotVibrate=true;
+//                                              Vibration.cancel();
                                               _iconVibratorColor = Colors.black;
                                             }
 
@@ -447,15 +468,17 @@ class _WatcherState extends State<StartStopDialog> {
                                           setState(() {
                                             if(_iconSpeakerColor==Colors.black){
                                               _iconSpeakerColor = Color(0xFFBe97619);
-                                              FlutterRingtonePlayer.play(
-                                                android: AndroidSounds.notification,
-                                                ios: IosSounds.glass,
-                                                looping: true, // Android only - API >= 28
-                                                volume: 1, // Android only - API >= 28
-                                                asAlarm: true // Android only - all APIs
-                                              );
+                                              isNotVoice=false;
+//                                              FlutterRingtonePlayer.play(
+//                                                android: AndroidSounds.notification,
+//                                                ios: IosSounds.glass,
+//                                                looping: true, // Android only - API >= 28
+//                                                volume: 1, // Android only - API >= 28
+//                                                asAlarm: true // Android only - all APIs
+//                                              );
                                             }else{
-                                              FlutterRingtonePlayer.stop();
+                                              isNotVoice=true;
+//                                              FlutterRingtonePlayer.stop();
                                               _iconSpeakerColor = Colors.black;
                                             }
 
@@ -535,6 +558,8 @@ class _WatcherState extends State<StartStopDialog> {
 
   _saveData() {
 
+    watch.stop();
+
     DateFormat dateFormat = new DateFormat.Hms();
 
     DateTime bOpen = dateFormat.parse("03:00:01");
@@ -557,43 +582,9 @@ class _WatcherState extends State<StartStopDialog> {
     String abites = bites.toString();
     String atotalTime = totalTime;
 
-    print('time is '+'$time');
-
-    Model model = new Model(time, meal, abites, atotalTime);
-    var object = model.toJson();
-
-    print("modelData"+object.toString());
-
-//    dataList.add(object.toString());
-
-    sharedPref.save('newList', object.toString());
-
-
-    loadSharedPrefs();
-    Navigator.pop(context);
-  }
-  loadSharedPrefs() async {
-    try {
-      List<String> list =await sharedPref.read('newList');
-//      List list = new List( jsonDecode(string));
-//      Scaffold.of(context).showSnackBar(SnackBar(
-//          content: new Text("Loaded!"),
-//          duration: const Duration(milliseconds: 500)));
-     print('listid'+list[0]);
-
-      if(this.mounted){
-        setState(() {
-          dataList = list;
-
-        });
-      }
-      print('DataList'+list.toString());
-
-    } catch (Excepetion) {
-//      Scaffold.of(context).showSnackBar(SnackBar(
-//          content: new Text("Nothing found!"),
-//          duration: const Duration(milliseconds: 500)));
-    }
+    setState(() {
+      _insert(time,meal,abites,atotalTime);
+    });
   }
 
   void calculateProgress(int inSeconds) {
@@ -652,6 +643,22 @@ class _WatcherState extends State<StartStopDialog> {
         _timeString = separated[1];
       });
     }
+  }
+
+  void _insert(String a,String b,String c,String d) async {
+    // row to insert
+    Map<String, dynamic> row = {
+      DatabaseHelper.columnTime : a,
+      DatabaseHelper.columnMeal  : b ,
+      DatabaseHelper.columnBites  : c ,
+      DatabaseHelper.columnTotalTime  : d ,
+    };
+    final id = await dbHelper.insert(row);
+    print('inserted row id: $id');
+    print('inserted row is: ${row.toString()}');
+
+    Navigator.pop(context);
+
   }
 
 

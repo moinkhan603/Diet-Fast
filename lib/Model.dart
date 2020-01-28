@@ -4,6 +4,7 @@ class Model{
   String meal;
   String bites;
   String totalTime;
+  int id;
 
 
   Model (this.time,this.meal,this.bites,this.totalTime);
@@ -52,4 +53,8 @@ class Model{
     'bites': bites,
     'totalTime': totalTime,
   };
+
+  void setRowId(int id) {
+    this.id = id;
+  }
 }
