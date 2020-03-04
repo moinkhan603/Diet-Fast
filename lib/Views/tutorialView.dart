@@ -13,13 +13,15 @@ class _WatcherState extends State<tutorialView> {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
+      
       body: GestureDetector(
         onTap: (){
           Navigator.pop(context,true);
         },
         child: Image.asset(
+          
           'assets/images/tutorial_3.jpg',
-          fit: BoxFit.cover,
+          //fit: BoxFit.cover,
           height: double.infinity,
           width: double.infinity,
           alignment: Alignment.center,

@@ -7,8 +7,10 @@ import 'package:diet_fast_forward/NavBars/FatBurnBar.dart';
 import 'package:diet_fast_forward/NavBars/HomeBar.dart';
 import 'package:diet_fast_forward/NavBars/NineFactorBar.dart';
 import 'package:diet_fast_forward/NavBars/TodayBar.dart';
+import 'package:diet_fast_forward/SharedPref.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -28,6 +30,9 @@ class _HomeState extends State<HomescreenView> {
     HomeBar(),
     ChewBar(),
     FatBurnBar(),
+    NineFactorBar(),
+
+   // RaisedButton()
   ];
 
 
@@ -78,13 +83,22 @@ class _HomeState extends State<HomescreenView> {
               activeIcon: new Icon(Icons.live_help,color: Colors.black,),
               title: Text('Support',style: TextStyle(color: Colors.black)),
           ),
+
+          BottomNavigationBarItem(
+
+              icon: new Icon(Icons.play_arrow,color: Colors.grey,),
+              activeIcon: new Icon(Icons.live_help,color: Colors.black,),
+              title: Text('Exit',style: TextStyle(color: Colors.black)),
+          )
+
         ],
       ),
     );
   }
   void onTabTapped(int index) {
-    if(index==5){
-      _launchSupport();
+    if(index==6){
+      SystemNavigator.pop();
+    //  _launchSupport();
     }
     else{
       setState(() {
@@ -103,3 +117,4 @@ class _HomeState extends State<HomescreenView> {
   }
 
 }
+

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../Bar.dart';
 
@@ -82,16 +83,38 @@ class _FatBurnBarState extends State<FatBurnBar> {
       key: _scaffoldKey,
       body: SingleChildScrollView(
         child: Container(
+            
+
 //          margin: EdgeInsets.only(left: 20,right: 20,bottom: 20,top: 20),
           color: Colors.white,
           child: Column(
             children: <Widget>[
+
+              
+//                   Container(
+//                    margin: EdgeInsets.only(top:10,right: double.infinity),
+//              child: IconButton(
+//
+//              icon: Icon(Icons.arrow_back,size: 35,),
+//              onPressed: (){
+//
+//                 SystemNavigator.pop();
+//              },
+//            )
+//
+//
+//                    //: Icon(Icons.arrow_back)
+//                    //child: Text(_timeString,style: TextStyle(fontSize: 22,color: Color(0xFFBe97619),fontWeight: FontWeight.bold),),
+//                  ),
+ 
               Container(
-                padding: EdgeInsets.only(top: 30,left: 30,right: 30),
+
+                padding: EdgeInsets.only(top: 55,left: 30,right: 30),
                 child: Text(_timeString,style: TextStyle(fontSize: 22,
                     color: Color(0xFFBe97619),
                     fontWeight: FontWeight.bold),),
               ),
+              
               Container(
                 padding: EdgeInsets.all(20),
                 child: Card(
@@ -99,9 +122,18 @@ class _FatBurnBarState extends State<FatBurnBar> {
                     padding: EdgeInsets.only(top: 30,bottom: 30),
                       child:Column(
                         children: <Widget>[
+                          
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
+                             
+                   // margin: EdgeInsets.only(top:10,left: 10),
+                   
+            
+
+                    //: Icon(Icons.arrow_back)
+                    //child: Text(_timeString,style: TextStyle(fontSize: 22,color: Color(0xFFBe97619),fontWeight: FontWeight.bold),),
+                 
                               Container(
                                   padding: EdgeInsets.only(right: 10),
                                   child:Image.asset('assets/images/forwardbutton.png',
@@ -118,11 +150,24 @@ class _FatBurnBarState extends State<FatBurnBar> {
                               )
                             ],
                           ),
-                          Visibility(
-                            visible: imgVis,
+                          GestureDetector(
+                            onTap: launchNewUrl,
+                            child: Visibility(
+                              visible: imgVis,
+                              child: Container(
+                                margin: EdgeInsets.only(top: 30),
+                                child: Image.asset('assets/images/diet_fast_forward.png'),
+                              ),
+                            ),
+                          ),
+
+                          RaisedButton(
+                              color: Color(0xFFBe97619),
+                            onPressed: launchNewUrl,
                             child: Container(
-                              margin: EdgeInsets.only(top: 30),
-                              child: Image.asset('assets/images/diet_fast_forward.png'),
+                              margin: EdgeInsets.all(20),
+                              padding: EdgeInsets.only(left: 20,right: 20,top: 10,bottom: 10),
+                              child: Text('GET YOURS TODAY',style: TextStyle(color: Colors.white,fontSize: 20),),
                             ),
                           ),
                           Container(
@@ -196,8 +241,7 @@ class _FatBurnBarState extends State<FatBurnBar> {
                                             controller: _firstFilter,
                                               style: new TextStyle(
                                                   fontSize: 28.0,
-//                                                  height: 2.0,
-//                                                  color: Colors.black
+                                                  color: Colors.black
                                               ),
 //                                              validator: Validators.min(8, 'Value less than 8 not allowed'),
                                             decoration: InputDecoration(
@@ -222,8 +266,7 @@ class _FatBurnBarState extends State<FatBurnBar> {
                                             controller: _secondFilter,
                                             style: new TextStyle(
                                               fontSize: 28.0,
-//                                                  height: 2.0,
-//                                                  color: Colors.black
+                                                  color: Colors.black
                                             ),
                                             decoration: InputDecoration(
                                               border: InputBorder.none,
@@ -467,6 +510,15 @@ class _FatBurnBarState extends State<FatBurnBar> {
           Bar(0.8, '7', '80'),
         ],
       );
+    }
+  }
+
+  Future<void> launchNewUrl() async {
+    String url='https://ketofastforward.com/order';
+    if (await canLaunch(url)) {
+    await launch(url);
+    } else {
+    throw 'Could not launch $url';
     }
   }
 }

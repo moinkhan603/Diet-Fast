@@ -6,6 +6,7 @@ import 'package:diet_fast_forward/NavBars/FatBurnBar.dart';
 import 'package:diet_fast_forward/NavBars/NineFactorBar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -42,8 +43,10 @@ class _HomeBarState extends State<HomeBar> {
               padding: EdgeInsets.only(top: 60,left: 20,right: 20),
               child: Stack(
                 children: <Widget>[
+ 
+
                   Container(
-                    margin: EdgeInsets.only(top:5,left: 20),
+                  //  margin: EdgeInsets.only(top:5,left: 10),
                     child: Text(_timeString,style: TextStyle(fontSize: 22,color: Color(0xFFBe97619),fontWeight: FontWeight.bold),),
                   ),
                   Align(

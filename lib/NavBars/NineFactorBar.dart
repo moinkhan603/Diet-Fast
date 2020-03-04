@@ -35,8 +35,22 @@ List times= List();
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
+//            Container(
+//                    margin: EdgeInsets.only(top:20,right: double.infinity),
+//              child: IconButton(
+//
+//              icon: Icon(Icons.arrow_back,size: 35,),
+//              onPressed: (){
+//                SystemNavigator.pop();
+//              },
+//            )
+//
+//
+//                    //: Icon(Icons.arrow_back)
+//                    //child: Text(_timeString,style: TextStyle(fontSize: 22,color: Color(0xFFBe97619),fontWeight: FontWeight.bold),),
+//                  ),
           Container(
-            padding: EdgeInsets.only(top: 60),
+            padding: EdgeInsets.only(top: 35),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[

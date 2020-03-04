@@ -26,7 +26,7 @@ class Bar extends StatelessWidget {
 //            ),
             Container(
               width: 30,
-              margin: EdgeInsets.only(left: 5,right: 5),
+              margin: EdgeInsets.only(left: 8,right: 8),
               height: animatedHeight * _maxElementHeight,
               color: Color(0xFFBe97619),
             ),

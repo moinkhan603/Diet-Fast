@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
-//import 'dart:html';
 
-import 'package:diet_fast_forward/Database/DatabaseHelper.dart';
-import 'package:diet_fast_forward/Model.dart';
+
 import 'package:diet_fast_forward/Views/tutorialView.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -26,16 +23,22 @@ class StartStopDialog extends StatefulWidget {
 
 class _WatcherState extends State<StartStopDialog> {
 
-  final dbHelper = DatabaseHelper.instance;
+//  final dbHelper = DatabaseHelper.instance;
+
+  SharedPref sharedPref=SharedPref();
 
   String _timeString;
   String _mealString='BreakFast';
+
+  int valueOfTime=0;
 
   @override
   void initState() {
     _timeString = _formatDateTime(DateTime.now());
     Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
     super.initState();
+
+    getSharedPref();
 
   }
 //  SharedPref sharedPref = SharedPref();
@@ -88,11 +91,11 @@ class _WatcherState extends State<StartStopDialog> {
       if (this.mounted) {
         setState(() {
           stopTimeToDisplay=
-              (watch.elapsed.inMinutes%60).toString().padLeft(2,'0')+' :'' '+
-                  (watch.elapsed.inSeconds%60).toString().padLeft(2,'0')+' : ' +
-                  (watch.elapsed.inMilliseconds%1000).toString().padLeft(2,'0');
+              (watch.elapsed.inHours%60).toString().padLeft(2,'0')+' :'' '+
+                  (watch.elapsed.inMinutes%60).toString().padLeft(2,'0')+' : ' +
+                  (watch.elapsed.inSeconds%60).toString().padLeft(2,'0');
           if(!isNotVoice){
-//            FlutterRingtonePlayer.playNotification();
+            FlutterRingtonePlayer.playNotification();
             FlutterRingtonePlayer.play(
               android: AndroidSounds.notification,
               ios: IosSounds.glass,
@@ -177,6 +180,8 @@ class _WatcherState extends State<StartStopDialog> {
     watch.start();
     startTimer();
   }
+
+
 
 
 
@@ -556,16 +561,16 @@ class _WatcherState extends State<StartStopDialog> {
   }
 
 
-  _saveData() {
+  _saveData() async {
 
     watch.stop();
 
-    DateFormat dateFormat = new DateFormat.Hms();
+    DateFormat dateFormat = new DateFormat.jm();
 
-    DateTime bOpen = dateFormat.parse("03:00:01");
-    DateTime bClose = dateFormat.parse("12:00:00");
-    DateTime lOpen = dateFormat.parse("12:00:01");
-    DateTime lClose = dateFormat.parse("18:00:00");
+    DateTime bOpen = dateFormat.parse("03:01 AM");
+    DateTime bClose = dateFormat.parse("12:00 PM");
+    DateTime lOpen = dateFormat.parse("12:01 PM");
+    DateTime lClose = dateFormat.parse("18:00 PM");
     DateTime now = dateFormat.parse(_timeString);
 
     if(now.isAfter(bOpen)&&now.isBefore(bClose)){
@@ -582,9 +587,13 @@ class _WatcherState extends State<StartStopDialog> {
     String abites = bites.toString();
     String atotalTime = totalTime;
 
-    setState(() {
-      _insert(time,meal,abites,atotalTime);
-    });
+
+    String s=time+'-'+meal+'-'+abites+'-'+atotalTime;
+//    dataList.add(s);
+//    print('modeling'+model.toJson().toString());
+    await sharedPref.save('newDataTable', s);
+
+    Navigator.pop(context);
   }
 
   void calculateProgress(int inSeconds) {
@@ -612,7 +621,19 @@ class _WatcherState extends State<StartStopDialog> {
   void resetCycleStopwatch(){
     if(this.mounted){
       setState(() {
-        totalTime=stopTimeToDisplay;
+        if(totalTime=='0'){
+          totalTime=stopTimeToDisplay;
+        }else{
+          valueOfTime=valueOfTime+1;
+          int newValue=int.parse(_chewFilter.text)+int.parse(_pauseTimeFilter.text);
+          int minutes=(((watch.elapsed.inSeconds+newValue*valueOfTime)/60)%60).toInt();
+          int hours=(((watch.elapsed.inSeconds+newValue*valueOfTime)/3600)%60).toInt();
+          totalTime=hours.toString()+' :'' '+
+             minutes.toString().padLeft(2,'0')+' : ' +
+              ((watch.elapsed.inSeconds+newValue*valueOfTime)%60).toString().padLeft(2,'0');
+
+        }
+
         stopTimeToDisplay='00:00:00';
         chewPerc=0.0;
         bitesPerc=0.0;
@@ -622,7 +643,7 @@ class _WatcherState extends State<StartStopDialog> {
         isPause=true;
         isFinish=true;
         isResume=false;
-        totalTime=totalTime;
+//        totalTime=totalTime;
 
       });
     }
@@ -631,7 +652,7 @@ class _WatcherState extends State<StartStopDialog> {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    return DateFormat('yyyy-MM-ddThh:mm:ss').format(dateTime);
+    return DateFormat.jm().format(dateTime);
   }
 
   void _getTime() {
@@ -645,21 +666,25 @@ class _WatcherState extends State<StartStopDialog> {
     }
   }
 
-  void _insert(String a,String b,String c,String d) async {
-    // row to insert
-    Map<String, dynamic> row = {
-      DatabaseHelper.columnTime : a,
-      DatabaseHelper.columnMeal  : b ,
-      DatabaseHelper.columnBites  : c ,
-      DatabaseHelper.columnTotalTime  : d ,
-    };
-    final id = await dbHelper.insert(row);
-    print('inserted row id: $id');
-    print('inserted row is: ${row.toString()}');
-
-    Navigator.pop(context);
-
+  Future<void> getSharedPref() async {
+    dataList=await sharedPref.read('newDataTable');
   }
+
+//  void _insert(String a,String b,String c,String d) async {
+//    // row to insert
+//    Map<String, dynamic> row = {
+//      DatabaseHelper.columnTime : a,
+//      DatabaseHelper.columnMeal  : b ,
+//      DatabaseHelper.columnBites  : c ,
+//      DatabaseHelper.columnTotalTime  : d ,
+//    };
+//    final id = await dbHelper.insert(row);
+//    print('inserted row id: $id');
+//    print('inserted row is: ${row.toString()}');
+//
+//    Navigator.pop(context);
+//
+//  }
 
 
 }

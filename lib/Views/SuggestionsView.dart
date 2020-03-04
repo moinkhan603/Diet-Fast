@@ -98,6 +98,26 @@ class _SuggestionState extends State<SuggestionsView> {
                   )
               ),
             ),
+
+
+            Container(
+              margin: EdgeInsets.all(10),
+              child: RaisedButton(
+                  onPressed: ()=>Navigator.pop(context),
+                  color: Color(0xFFBe97619),
+                  child: Container(
+                      width: 250,
+                      padding: EdgeInsets.only(top: 15,bottom: 15),
+                      child: Center(
+                        child: Text('GO BACK',style: TextStyle(color: Colors.white,fontSize: 16),),
+                      )
+                  )
+              ),
+            ),
+
+
+
+
           ],
         ),
       ),
